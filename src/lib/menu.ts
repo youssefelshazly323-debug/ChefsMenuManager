@@ -21,6 +21,17 @@ const COURSE_IMAGES: Record<Course, string> = {
   Dessert: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=800&q=80',
 };
 
+const DISH_IMAGES: Record<string, string> = {
+  'beef stroganoff':
+    'https://images.unsplash.com/photo-1600891964599-f61ba0e24092?auto=format&fit=crop&w=800&q=80',
+  'fruit tart':
+    'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=800&q=80',
+};
+
+export function getMenuItemImage(name: string, course: Course): string {
+  return DISH_IMAGES[name.trim().toLowerCase()] ?? COURSE_IMAGES[course];
+}
+
 export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   {
     id: 'grilled-salmon',
@@ -28,7 +39,7 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
     description: 'Fresh salmon fillet grilled with lemon butter sauce, served with seasonal veg.',
     course: 'Main',
     price: 185,
-    image: COURSE_IMAGES.Main,
+    image: getMenuItemImage('Grilled Salmon', 'Main'),
   },
 
   {
@@ -37,7 +48,7 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
     description: 'Tender strips of beef in a creamy mushroom sauce, served over egg noodles.',
     course: 'Main',
     price: 195,
-    image: COURSE_IMAGES.Main,
+    image: getMenuItemImage('Beef Stroganoff', 'Main'),
   },
   
   {
@@ -46,7 +57,7 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
     description: 'Crisp romaine lettuce with parmesan, croutons, and a creamy dressing.',
     course: 'Starter',
     price: 95,
-    image: COURSE_IMAGES.Starter,
+    image: getMenuItemImage('Caesar Salad', 'Starter'),
   },
 
   {
@@ -55,7 +66,7 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
     description: 'Warm chocolate cake with a molten centre and vanilla bean cream.',
     course: 'Dessert',
     price: 75,
-    image: COURSE_IMAGES.Dessert,
+    image: getMenuItemImage('Choc Lava Cake', 'Dessert'),
   },
 
   {
@@ -64,7 +75,7 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   description: 'A buttery tart filled with custard and topped with fresh seasonal fruits.',
     course: 'Dessert',
     price: 85,
-    image: COURSE_IMAGES.Dessert,
+    image: getMenuItemImage('Fruit Tart', 'Dessert'),
   },  
 
 ];
@@ -86,7 +97,26 @@ export async function loadMenuItems(): Promise<MenuItem[]> {
     }
 
     const parsed = JSON.parse(rawValue) as MenuItem[];
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_MENU_ITEMS;
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return DEFAULT_MENU_ITEMS;
+    }
+
+    let imagesUpdated = false;
+    const items = parsed.map((item) => {
+      const image = getMenuItemImage(item.name, item.course);
+      if (item.image === image) {
+        return item;
+      }
+
+      imagesUpdated = true;
+      return { ...item, image };
+    });
+
+    if (imagesUpdated) {
+      await persistMenuItems(items);
+    }
+
+    return items;
   } catch (error) {
     console.warn('Failed to load menu items', error);
     return DEFAULT_MENU_ITEMS;
