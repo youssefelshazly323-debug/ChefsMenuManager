@@ -69,7 +69,7 @@ export default function ItemDetailsScreen() {
             <Text style={styles.name}>{item.name}</Text>
 
             <View style={styles.metaCard}>
-              <Text style={styles.metaLabel}>Chef's description</Text>
+              <Text style={styles.metaLabel}>Chef&apos;s description</Text>
               <Text style={styles.description}>{item.description}</Text>
             </View>
 
