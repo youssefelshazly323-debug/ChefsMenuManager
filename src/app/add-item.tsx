@@ -15,7 +15,6 @@ import {
   COURSE_OPTIONS,
   Course,
   MenuItem,
-  formatPrice,
   getCourseImage,
   loadMenuItems,
   persistMenuItems,
