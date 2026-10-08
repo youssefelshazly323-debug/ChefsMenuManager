@@ -50,16 +50,6 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   },
 
   {
-    id: 'bruschetta',
-    name: 'Bruschetta',
-    description: 'Grilled bread topped with fresh tomatoes, basil, and garlic.',
-    course: 'Starter',
-    price: 85,
-    image: COURSE_IMAGES.Starter,
-  },
-
-
-  {
     id: 'choc-lava-cake',
     name: 'Choc Lava Cake',
     description: 'Warm chocolate cake with a molten centre and vanilla bean cream.',
