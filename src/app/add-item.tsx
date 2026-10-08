@@ -15,7 +15,7 @@ import {
   COURSE_OPTIONS,
   Course,
   MenuItem,
-  getCourseImage,
+  getMenuItemImage,
   loadMenuItems,
   persistMenuItems,
 } from '@/lib/menu';
@@ -86,7 +86,7 @@ export default function AddItemScreen() {
       description: description.trim(),
       course,
       price: cleanedPrice,
-      image: getCourseImage(course),
+      image: getMenuItemImage(name.trim(), course),
     };
 
     const updatedItems = editingItemId
