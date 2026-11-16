@@ -49,14 +49,20 @@ export default function AddItemScreen() {
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
-    const menuItem: MenuItem = {
-      id: editingItemId ?? `${Date.now()}`,
-      name: name.trim(),
-      description: description.trim(),
-      course,
-      price: Number(price.replace(',', '.')),
-      image: getMenuItemImage(name.trim(), course),
-    };
+    const existingItem = items.find(
+  (item) => item.id === editingItemId
+);
+
+const menuItem: MenuItem = {
+  id: editingItemId ?? `${Date.now()}`,
+  name: name.trim(),
+  description: description.trim(),
+  course,
+  price: Number(price.replace(',', '.')),
+  image: isEditing
+    ? existingItem?.image ?? getMenuItemImage(name.trim(), course)
+    : getMenuItemImage(name.trim(), course),
+};
 
     const updatedItems = isEditing
       ? items.map((item) => (item.id === editingItemId ? menuItem : item))
