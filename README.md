@@ -10,7 +10,8 @@ npx expo start      # press 'a' for Android emulator, or scan the QR code with E
 ```
 
 **Video demonstration:** https://youtu.be/gWuV6LId2PU
-
+**Video demonstration Part 3:** https://youtube.com/shorts/qbwTm-umNMc
+                     
 ## Features
 - Add, edit and delete menu items (changes show immediately, saved with AsyncStorage)
 - Search dishes by name (case-insensitive) and filter by course (Starter / Main / Dessert)
