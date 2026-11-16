@@ -100,23 +100,12 @@ export async function loadMenuItems(): Promise<MenuItem[]> {
     if (!Array.isArray(parsed) || parsed.length === 0) {
       return DEFAULT_MENU_ITEMS;
     }
+const items = parsed.map((item) => ({
+  ...item,
+  image: item.image || getMenuItemImage(item.name, item.course),
+}));
 
-    let imagesUpdated = false;
-    const items = parsed.map((item) => {
-      const image = getMenuItemImage(item.name, item.course);
-      if (item.image === image) {
-        return item;
-      }
-
-      imagesUpdated = true;
-      return { ...item, image };
-    });
-
-    if (imagesUpdated) {
-      await persistMenuItems(items);
-    }
-
-    return items;
+return items;
   } catch (error) {
     console.warn('Failed to load menu items', error);
     return DEFAULT_MENU_ITEMS;
