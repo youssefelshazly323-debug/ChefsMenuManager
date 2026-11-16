@@ -20,10 +20,6 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.youssef1512.ChefsMenuManager"
     },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
     "plugins": [
       "expo-router",
       [
@@ -44,6 +40,10 @@
       "eas": {
         "projectId": "08b84652-602e-4508-a5f3-254dcf63b4f7"
       }
-    }
+    },
+    "platforms": [
+      "android",
+      "ios"
+    ]
   }
 }

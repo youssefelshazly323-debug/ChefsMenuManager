@@ -1,12 +1,12 @@
 # Chef's Menu Manager
 
 A React Native (Expo) **mobile app** that lets a chef capture, manage, search and analyse the dishes on their menu.
-Runs on Android/iOS through Expo Go (or the APK built with EAS, see `eas.json`).
+This is a **native mobile app (Android/iOS) only – there is no web version**. Run it in Expo Go on a phone, on an Android emulator, or install the APK built with EAS (`eas build -p android --profile preview`).
 
 ## Run the app
 ```bash
 npm install
-npx expo start      # scan the QR code with Expo Go on your phone
+npx expo start      # press 'a' for Android emulator, or scan the QR code with Expo Go
 ```
 
 **Video demonstration:** https://youtu.be/gWuV6LId2PU
@@ -32,6 +32,9 @@ npx expo start      # scan the QR code with Expo Go on your phone
 | Statistics | New `statistics.tsx` screen (opened from Home) showing total items, average price and items per course. |
 | Empty states | Friendly messages for "no dishes yet", "no matching dishes" and "no statistics yet". |
 | Validation | Field-level error messages under each input (red border). New rules: name min 2 chars, **duplicate names rejected**, description min 10 chars, price must be a number > 0 and ≤ R10 000, comma decimals accepted. |
+
+## Mobile-only
+- Removed the web target (`web` config in `app.json`, `react-dom`, `react-native-web`, web-only hooks); `platforms` is now `android` and `ios`.
 
 ## Refactoring
 - **Reusable components** created in `src/components/menu/`: `MenuCard`, `CourseChips`, `AppButton`, `ScreenHeader`, `EmptyState`. The same chips component is used for the Home filter and the course picker on the form.
