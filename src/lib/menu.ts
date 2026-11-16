@@ -102,8 +102,13 @@ export async function loadMenuItems(): Promise<MenuItem[]> {
     }
 const items = parsed.map((item) => ({
   ...item,
-  image: item.image || getMenuItemImage(item.name, item.course),
+  image:
+    item.id === 'choc-lava-cake'
+      ? COURSE_IMAGES.Dessert
+      : item.image || getMenuItemImage(item.name, item.course),
 }));
+
+await persistMenuItems(items);
 
 return items;
   } catch (error) {
