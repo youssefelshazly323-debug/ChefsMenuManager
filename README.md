@@ -1,56 +1,54 @@
-# Welcome to your Expo app 👋
+# Chef's Menu Manager
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native (Expo) **mobile app** that lets a chef capture, manage, search and analyse the dishes on their menu.
+Runs on Android/iOS through Expo Go (or the APK built with EAS, see `eas.json`).
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+## Run the app
 ```bash
-npm run reset-project
+npm install
+npx expo start      # scan the QR code with Expo Go on your phone
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+**Video demonstration:** https://youtu.be/gWuV6LId2PU
 
-### Other setup steps
+## Features
+- Add, edit and delete menu items (changes show immediately, saved with AsyncStorage)
+- Search dishes by name (case-insensitive) and filter by course (Starter / Main / Dessert)
+- Clear search & filter to show all dishes again
+- Menu statistics: total items, average price, number of items per course
+- Inline form validation, success/error messages and empty-state messages
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+---
 
-## Learn more
+# Change Log (Part 2 → Part 3 / Final PoE)
 
-To learn more about developing your project with Expo, look at the following resources:
+## New functionality
+| Area | Change |
+|---|---|
+| Manage items | Edit and delete flows kept and improved: delete now shows a confirmation **and** a success message; the list refreshes instantly when returning to Home (`useFocusEffect`). |
+| Search | Added a search box on the Home screen that filters by dish name as the chef types, with a ✕ button to clear the text. |
+| Filter | Course filter (All / Starter / Main / Dessert) now works together with the search. |
+| Clear | Added a "Clear search & filter" link that resets everything and shows all items. |
+| Statistics | New `statistics.tsx` screen (opened from Home) showing total items, average price and items per course. |
+| Empty states | Friendly messages for "no dishes yet", "no matching dishes" and "no statistics yet". |
+| Validation | Field-level error messages under each input (red border). New rules: name min 2 chars, **duplicate names rejected**, description min 10 chars, price must be a number > 0 and ≤ R10 000, comma decimals accepted. |
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Refactoring
+- **Reusable components** created in `src/components/menu/`: `MenuCard`, `CourseChips`, `AppButton`, `ScreenHeader`, `EmptyState`. The same chips component is used for the Home filter and the course picker on the form.
+- **Reusable functions** added to `src/lib/menu.ts`: `filterMenuItems`, `calculateStatistics`, `validateMenuForm` (UI-free logic, separated from screens).
+- **Central theme** `src/constants/app-theme.ts` (colours, fonts, spacing) replaces repeated hard-coded colour values.
+- **Removed repeated code**: the back-button header and the button styles were copy-pasted on every screen; now single components.
+- **Removed template leftovers** (unused Expo starter components, `explore` redirect screen, unused images) and the placeholder captions ("Home screen showing the list...") that were left on screens from Part 1.
+- **Renamed / simplified**: `syncItems`/`fetchItem` loaders replaced with a single `loadMenuItems().then(...)` pattern; `modeLabel` memo replaced by an `isEditing` flag.
+- **Fixed**: the course field was a disabled `TextInput` pretending to be a dropdown; replaced with selectable chips only. Details screen now uses `expo-image` like the list.
 
-## Join the community
+## UX improvements
+- Consistent header, spacing, buttons and colours on all four screens.
+- Clear navigation: back button on every screen, "View Menu Statistics" and "Add New Item" on Home, Cancel on the form.
+- Keyboard handling on the form (`KeyboardAvoidingView`, `keyboardShouldPersistTaps`).
+- Accessibility labels on search, back and clear buttons.
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## References
+- React Native docs: https://reactnative.dev/docs
+- Expo Router docs: https://docs.expo.dev/router/introduction
+- AsyncStorage: https://react-native-async-storage.github.io/async-storage/

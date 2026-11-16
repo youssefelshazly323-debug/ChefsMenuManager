@@ -126,3 +126,88 @@ export async function loadMenuItems(): Promise<MenuItem[]> {
 export async function persistMenuItems(items: MenuItem[]): Promise<void> {
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
+
+// ---------------------------------------------------------------------------
+// Reusable helpers (added in Part 3)
+// ---------------------------------------------------------------------------
+
+export type CourseFilter = 'All' | Course;
+export const COURSE_FILTERS: CourseFilter[] = ['All', ...COURSE_OPTIONS];
+
+/** Filters by course and by a case-insensitive name search. Both are optional. */
+export function filterMenuItems(
+  items: MenuItem[],
+  searchText: string,
+  course: CourseFilter
+): MenuItem[] {
+  const query = searchText.trim().toLowerCase();
+  return items.filter((item) => {
+    const matchesCourse = course === 'All' || item.course === course;
+    const matchesName = query === '' || item.name.toLowerCase().includes(query);
+    return matchesCourse && matchesName;
+  });
+}
+
+export interface MenuStatistics {
+  totalItems: number;
+  averagePrice: number;
+  perCourse: Record<Course, number>;
+}
+
+export function calculateStatistics(items: MenuItem[]): MenuStatistics {
+  const perCourse: Record<Course, number> = { Starter: 0, Main: 0, Dessert: 0 };
+  items.forEach((item) => {
+    perCourse[item.course] += 1;
+  });
+  const total = items.reduce((sum, item) => sum + item.price, 0);
+  return {
+    totalItems: items.length,
+    averagePrice: items.length === 0 ? 0 : total / items.length,
+    perCourse,
+  };
+}
+
+export interface MenuFormErrors {
+  name?: string;
+  description?: string;
+  price?: string;
+}
+
+/** Validates the add/edit form. Returns an object of field errors (empty = valid). */
+export function validateMenuForm(
+  values: { name: string; description: string; price: string },
+  existingItems: MenuItem[],
+  editingId: string | null
+): MenuFormErrors {
+  const errors: MenuFormErrors = {};
+  const name = values.name.trim();
+
+  if (!name) {
+    errors.name = 'Please enter the dish name.';
+  } else if (name.length < 2) {
+    errors.name = 'The dish name must be at least 2 characters.';
+  } else if (
+    existingItems.some(
+      (item) => item.id !== editingId && item.name.toLowerCase() === name.toLowerCase()
+    )
+  ) {
+    errors.name = 'A dish with this name already exists.';
+  }
+
+  if (!values.description.trim()) {
+    errors.description = 'Please add a short description.';
+  } else if (values.description.trim().length < 10) {
+    errors.description = 'The description must be at least 10 characters.';
+  }
+
+  const price = Number(values.price.replace(',', '.'));
+  if (!values.price.trim()) {
+    errors.price = 'Please enter a price.';
+  } else if (!Number.isFinite(price) || price <= 0) {
+    errors.price = 'Enter a valid price greater than zero.';
+  } else if (price > 10000) {
+    errors.price = 'Price looks too high (max R10 000).';
+  }
+
+  return errors;
+}

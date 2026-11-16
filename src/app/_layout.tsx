@@ -11,6 +11,7 @@ export default function RootLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="add-item" />
       <Stack.Screen name="item-details" />
+      <Stack.Screen name="statistics" />
     </Stack>
   );
 }

@@ -1,81 +1,100 @@
-import { useCallback, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { COURSE_OPTIONS, MenuItem, formatPrice, loadMenuItems } from '@/lib/menu';
-
-const FILTERS = ['All', ...COURSE_OPTIONS] as const;
-type FilterType = (typeof FILTERS)[number];
+import { AppButton } from '@/components/menu/app-button';
+import { CourseChips } from '@/components/menu/course-chips';
+import { EmptyState } from '@/components/menu/empty-state';
+import { MenuCard } from '@/components/menu/menu-card';
+import { colors, fonts } from '@/constants/app-theme';
+import { COURSE_FILTERS, CourseFilter, MenuItem, filterMenuItems, loadMenuItems } from '@/lib/menu';
 
 export default function HomeScreen() {
   const [items, setItems] = useState<MenuItem[]>([]);
-  const [activeFilter, setActiveFilter] = useState<FilterType>('All');
+  const [searchText, setSearchText] = useState('');
+  const [activeFilter, setActiveFilter] = useState<CourseFilter>('All');
 
-  const syncItems = useCallback(async () => {
-    const storedItems = await loadMenuItems();
-    setItems(storedItems);
-  }, []);
-
+  // Reload whenever the screen regains focus so add/edit/delete show immediately.
   useFocusEffect(
     useCallback(() => {
-      void syncItems();
-    }, [syncItems])
+      void loadMenuItems().then(setItems);
+    }, [])
   );
 
-  const filteredItems =
-    activeFilter === 'All' ? items : items.filter((item) => item.course === activeFilter);
-
-  const renderItem = ({ item }: { item: MenuItem }) => (
-    <Pressable style={styles.card} onPress={() => router.push({ pathname: '/item-details', params: { id: item.id } })}>
-      <Image source={{ uri: item.image }} style={styles.cardImage} contentFit="cover" />
-      <View style={styles.cardTextArea}>
-        <Text style={styles.cardName}>{item.name}</Text>
-        <Text style={styles.cardCourse}>{item.course.toUpperCase()}</Text>
-        <Text style={styles.cardPrice}>{formatPrice(item.price)}</Text>
-      </View>
-      <Text style={styles.chevron}>›</Text>
-    </Pressable>
+  const visibleItems = useMemo(
+    () => filterMenuItems(items, searchText, activeFilter),
+    [items, searchText, activeFilter]
   );
+  const isFiltering = searchText.trim() !== '' || activeFilter !== 'All';
+
+  const clearFilters = () => {
+    setSearchText('');
+    setActiveFilter('All');
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <FlatList
-        data={filteredItems}
+        data={visibleItems}
         keyExtractor={(item) => item.id}
-        renderItem={renderItem}
+        keyboardShouldPersistTaps="handled"
+        renderItem={({ item }) => (
+          <MenuCard
+            item={item}
+            onPress={() => router.push({ pathname: '/item-details', params: { id: item.id } })}
+          />
+        )}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View>
             <Text style={styles.title}>My Menu</Text>
-
-            <Text style={styles.welcome}>Welcome back, Chef</Text>
             <Text style={styles.subText}>
-              You currently have {items.length} active dishes on your public menu.
+              Showing {visibleItems.length} of {items.length} dishes
             </Text>
 
-            <View style={styles.filterRow}>
-              {FILTERS.map((filter) => (
-                <Pressable
-                  key={filter}
-                  onPress={() => setActiveFilter(filter)}
-                  style={[styles.filterButton, activeFilter === filter && styles.filterButtonActive]}>
-                  <Text style={[styles.filterText, activeFilter === filter && styles.filterTextActive]}>
-                    {filter}
-                  </Text>
+            <View style={styles.searchRow}>
+              <TextInput
+                value={searchText}
+                onChangeText={setSearchText}
+                placeholder="Search dishes by name..."
+                placeholderTextColor="#9b9b9b"
+                style={styles.searchInput}
+                returnKeyType="search"
+                accessibilityLabel="Search menu items"
+              />
+              {searchText !== '' && (
+                <Pressable onPress={() => setSearchText('')} style={styles.clearX} accessibilityLabel="Clear search">
+                  <Text style={styles.clearXText}>✕</Text>
                 </Pressable>
-              ))}
+              )}
             </View>
+
+            <View style={styles.filterWrap}>
+              <CourseChips options={COURSE_FILTERS} selected={activeFilter} onSelect={setActiveFilter} />
+            </View>
+
+            {isFiltering && (
+              <Pressable onPress={clearFilters} style={styles.clearAll}>
+                <Text style={styles.clearAllText}>Clear search & filter</Text>
+              </Pressable>
+            )}
           </View>
         }
+        ListEmptyComponent={
+          items.length === 0 ? (
+            <EmptyState title="No dishes yet" message="Tap “Add New Item” to create your first dish." />
+          ) : (
+            <EmptyState
+              title="No matching dishes"
+              message="Nothing matches your search or filter. Try clearing it to see all dishes."
+            />
+          )
+        }
         ListFooterComponent={
-          <View style={styles.footerWrap}>
-            <Pressable onPress={() => router.push('/add-item')} style={styles.addButton}>
-              <Text style={styles.addButtonText}>＋ Add New Item</Text>
-            </Pressable>
-            <View style={styles.footerLine} />
-            <Text style={styles.footerNote}>Home screen showing the list of saved menu items and an Add New Item button.</Text>
+          <View style={styles.footer}>
+            <AppButton label="＋ Add New Item" onPress={() => router.push('/add-item')} />
+            <AppButton label="View Menu Statistics" variant="outline" onPress={() => router.push('/statistics')} />
           </View>
         }
       />
@@ -84,143 +103,33 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f2ede6',
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 32,
-  },
+  safeArea: { flex: 1, backgroundColor: colors.background },
+  listContent: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 32 },
   title: {
     textAlign: 'center',
     fontSize: 38,
     fontWeight: '700',
-    color: '#2c2928',
-    fontFamily: 'Georgia',
-    marginBottom: 18,
+    color: colors.text,
+    fontFamily: fonts.heading,
+    marginBottom: 6,
   },
-  welcome: {
-    fontSize: 42,
-    lineHeight: 46,
-    fontWeight: '400',
-    color: '#292624',
-    marginBottom: 8,
-    fontFamily: 'Georgia',
-  },
-  subText: {
-    fontSize: 17,
-    color: '#4f4a46',
-    marginBottom: 18,
-    textAlign: 'left',
-  },
-  filterRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 18,
-    flexWrap: 'wrap',
-  },
-  filterButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#d8d0c7',
-    backgroundColor: '#f5efe9',
-  },
-  filterButtonActive: {
-    backgroundColor: '#c5714b',
-    borderColor: '#b56544',
-  },
-  filterText: {
-    color: '#4b433f',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  filterTextActive: {
-    color: '#fff',
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5efe8',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#e2d7ce',
-    padding: 10,
-    marginBottom: 14,
-  },
-  cardImage: {
-    width: 90,
-    height: 90,
+  subText: { fontSize: 16, color: colors.textMuted, textAlign: 'center', marginBottom: 16 },
+  searchRow: { justifyContent: 'center', marginBottom: 12 },
+  searchInput: {
+    height: 50,
     borderRadius: 12,
-    backgroundColor: '#d4c2af',
+    backgroundColor: '#f3efe8',
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    paddingHorizontal: 14,
+    paddingRight: 44,
+    fontSize: 17,
+    color: colors.text,
   },
-  cardTextArea: {
-    flex: 1,
-    paddingHorizontal: 12,
-    justifyContent: 'center',
-  },
-  cardCourse: {
-    color: '#b06d53',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 2,
-  },
-  cardName: {
-    color: '#2d2a29',
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 2,
-    fontFamily: 'Georgia',
-  },
-  cardPrice: {
-    color: '#2d2b2a',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  chevron: {
-    fontSize: 30,
-    color: '#7a716b',
-    paddingHorizontal: 8,
-  },
-  footerWrap: {
-    marginTop: 10,
-  },
-  addButton: {
-    backgroundColor: '#c86e4c',
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: '700',
-    fontFamily: 'Georgia',
-  },
-  footerLine: {
-    height: 3,
-    width: 120,
-    borderRadius: 10,
-    backgroundColor: '#d9d3cd',
-    alignSelf: 'center',
-    marginTop: 18,
-    marginBottom: 14,
-  },
-  footerNote: {
-    fontSize: 13,
-    color: '#5b5754',
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
+  clearX: { position: 'absolute', right: 8, padding: 10 },
+  clearXText: { fontSize: 16, color: colors.textMuted },
+  filterWrap: { marginBottom: 12 },
+  clearAll: { alignSelf: 'flex-start', paddingVertical: 6, marginBottom: 10 },
+  clearAllText: { color: colors.accentDark, fontSize: 15, fontWeight: '700', textDecorationLine: 'underline' },
+  footer: { marginTop: 10, gap: 12 },
 });
