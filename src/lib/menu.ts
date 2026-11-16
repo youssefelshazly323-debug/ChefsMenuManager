@@ -108,6 +108,20 @@ const items = parsed.map((item) => ({
       : item.image || getMenuItemImage(item.name, item.course),
 }));
 
+const fruitTartExists = items.some(
+  (item) => item.id === 'fruit-tart'
+);
+
+if (!fruitTartExists) {
+  const fruitTart = DEFAULT_MENU_ITEMS.find(
+    (item) => item.id === 'fruit-tart'
+  );
+
+  if (fruitTart) {
+    items.push(fruitTart);
+  }
+}
+
 await persistMenuItems(items);
 
 return items;
@@ -120,11 +134,7 @@ return items;
 export async function persistMenuItems(items: MenuItem[]): Promise<void> {
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
-
-// ---------------------------------------------------------------------------
 // Reusable helpers (added in Part 3)
-// ---------------------------------------------------------------------------
-
 export type CourseFilter = 'All' | Course;
 export const COURSE_FILTERS: CourseFilter[] = ['All', ...COURSE_OPTIONS];
 
